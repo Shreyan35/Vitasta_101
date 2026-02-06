@@ -2,6 +2,19 @@
 
 Vitasta is a philosophy-forward fitness and learning experience. This repo contains the production-ready front-end built with React, Vite, and Tailwind CSS.
 
+## Backend (Node.js + Express + MongoDB)
+
+The backend lives in `backend/` and exposes API routes under `/api`. The front-end dev server proxies `/api` requests to `http://localhost:5000`.
+
+```bash
+cd backend
+cp .env.example .env
+npm install
+npm run dev
+```
+
+## Front-end
+
 ## Getting Started
 
 ```bash
