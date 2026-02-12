@@ -11,6 +11,14 @@ export default function HomePage() {
   const [activeService, setActiveService] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [programTab, setProgramTab] = useState('individual');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formStatus, setFormStatus] = useState({ type: '', message: '' });
+  const [formData, setFormData] = useState({
+    email: '',
+    firstName: '',
+    phone: '',
+    message: ''
+  });
   const [visibleSections, setVisibleSections] = useState({
     whatwedo: false,
     wisdom: false,
@@ -91,6 +99,43 @@ export default function HomePage() {
       top: 0,
       behavior: 'smooth'
     });
+  };
+
+  const handleFormChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setFormStatus({ type: '', message: '' });
+
+    try {
+      const response = await fetch('/api/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload?.message || 'Unable to submit enquiry.');
+      }
+
+      setFormStatus({
+        type: 'success',
+        message: 'Thanks for reaching out. We will respond shortly.'
+      });
+      setFormData({ email: '', firstName: '', phone: '', message: '' });
+    } catch (error) {
+      setFormStatus({
+        type: 'error',
+        message: error.message || 'Something went wrong. Please try again.'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -749,12 +794,15 @@ export default function HomePage() {
                 </div>
 
                 <div className="p-12 md:p-16 bg-black/80">
-                  <form className="space-y-6">
+                  <form className="space-y-6" onSubmit={handleFormSubmit}>
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <input
                           type="email"
+                          name="email"
                           placeholder="Email"
+                          value={formData.email}
+                          onChange={handleFormChange}
                           className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors"
                           required
                         />
@@ -762,7 +810,10 @@ export default function HomePage() {
                       <div>
                         <input
                           type="text"
+                          name="firstName"
                           placeholder="First Name"
+                          value={formData.firstName}
+                          onChange={handleFormChange}
                           className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors"
                           required
                         />
@@ -772,15 +823,21 @@ export default function HomePage() {
                     <div>
                       <input
                         type="text"
+                        name="phone"
                         placeholder="Phone Number"
+                        value={formData.phone}
+                        onChange={handleFormChange}
                         className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors"
                       />
                     </div>
 
                     <div>
                       <textarea
+                        name="message"
                         placeholder="How can we help?"
                         rows="5"
+                        value={formData.message}
+                        onChange={handleFormChange}
                         className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors resize-none"
                         required
                       ></textarea>
@@ -788,9 +845,10 @@ export default function HomePage() {
 
                     <button
                       type="submit"
+                      disabled={isSubmitting}
                       className="w-full bg-white text-black px-8 py-4 rounded-lg font-bold hover:bg-gray-200 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                     >
-                      Submit Enquiry
+                      {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="20"
@@ -806,6 +864,15 @@ export default function HomePage() {
                         <polyline points="12 5 19 12 12 19"></polyline>
                       </svg>
                     </button>
+                    {formStatus.message ? (
+                      <p
+                        className={`text-sm font-semibold ${
+                          formStatus.type === 'success' ? 'text-green-200' : 'text-red-200'
+                        }`}
+                      >
+                        {formStatus.message}
+                      </p>
+                    ) : null}
                   </form>
                 </div>
               </div>
